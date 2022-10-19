@@ -63,7 +63,7 @@ public class Main {
         try {
             Object obj = parser.parse(jsonString);
             JSONArray jsons = (JSONArray) obj;
-            for (Object json: jsons) {
+            for (Object json : jsons) {
                 Employee employee = gson.fromJson(json.toString(), Employee.class);
                 employees.add(employee);
             }
@@ -75,37 +75,16 @@ public class Main {
 
     private static String readString(String fileName) throws FileNotFoundException {
         String line;
-        StringBuilder result = new StringBuilder() ;
-        try(BufferedReader reader  = new BufferedReader( new FileReader(fileName))){
+        StringBuilder result = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             while ((line = reader.readLine()) != null) {
-                result.append (line + "\n");
+                result.append(line + "\n");
             }
             reader.readLine();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.getMessage();
         }
         return result.toString();
-    }
-    private static String readString1(String fileName) {
-        List<Employee> employees;
-        JSONObject jsonObject = null;
-        JSONParser parser = new JSONParser();
-        try {
-            Object obj = parser.parse(new FileReader(fileName));
-            JSONArray jsons = (JSONArray) obj;
-            for (Object json: jsons) {
-                jsonObject = (JSONObject) json;
-
-                GsonBuilder builder = new GsonBuilder();
-                Gson gson = builder.create();
-                Employee employee = gson.fromJson(json.toString(), Employee.class);
-
-            }
-            System.out.println(jsonObject);
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
-        }
-        return jsonObject.toString();
     }
 
     public static List<Employee> parseCSV(String[] columnMapping, String fileName) {
@@ -132,7 +111,7 @@ public class Main {
 
     private static void writeString(String json, String fileName) throws IOException {
         File file = new File(fileName);
-        if ( file.exists())
+        if (file.exists())
             file.delete();
 
         if (file.createNewFile()) {
@@ -149,7 +128,6 @@ public class Main {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(new File(fileName));
-
         Node root = doc.getDocumentElement();
         return read(root);
     }
