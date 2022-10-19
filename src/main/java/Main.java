@@ -5,6 +5,10 @@ import com.opencsv.CSVReader;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -13,10 +17,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,27 +25,87 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
         List<Employee> employees;
-        String fileNameCsv = "data.csv";
-        String fileNameXml = "data.xml";
-        String fileNameJsonCsv = "data.json";
-        String fileNameJsonXml = "data2.json";
+        String dir = "src/main/resources/";
+        String fileNameCsv = dir + "data.csv";
+        String fileNameXml = dir + "data.xml";
+        String fileNameJsonCsv = dir + "data.json";
+        String fileNameJsonXml = dir + "data2.json";
+        String fileNameJson = dir + "new_data.json";
         String json;
         //Первое задание
+        System.out.println("Первое задание");
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
-
         employees = parseCSV(columnMapping, fileNameCsv);
         json = listToJson(employees);
         writeString(json, fileNameJsonCsv);
-        System.out.println(json);
         employees.clear();
-        //Второе задание
         System.out.println("---------------------");
 
-        employees = parseXML("data.xml");
-        employees.forEach(System.out::println);
+        //Второе задание
+        System.out.println("Второе задание");
+        employees = parseXML(fileNameXml);
         json = listToJson(employees);
         writeString(json, fileNameJsonXml);
-        System.out.println(json);
+        System.out.println("---------------------");
+
+        //Третье задание
+        System.out.println("Третье задание");
+        String jsonString = readString(fileNameJson);
+        List<Employee> list = jsonToList(jsonString);
+        list.forEach(System.out::println);
+    }
+
+    private static List<Employee> jsonToList(String jsonString) {
+        List<Employee> employees = new ArrayList<>();
+        JSONParser parser = new JSONParser();
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        try {
+            Object obj = parser.parse(jsonString);
+            JSONArray jsons = (JSONArray) obj;
+            for (Object json: jsons) {
+                Employee employee = gson.fromJson(json.toString(), Employee.class);
+                employees.add(employee);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return employees;
+    }
+
+    private static String readString(String fileName) throws FileNotFoundException {
+        String line;
+        StringBuilder result = new StringBuilder() ;
+        try(BufferedReader reader  = new BufferedReader( new FileReader(fileName))){
+            while ((line = reader.readLine()) != null) {
+                result.append (line + "\n");
+            }
+            reader.readLine();
+        }catch (Exception e){
+            e.getMessage();
+        }
+        return result.toString();
+    }
+    private static String readString1(String fileName) {
+        List<Employee> employees;
+        JSONObject jsonObject = null;
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(new FileReader(fileName));
+            JSONArray jsons = (JSONArray) obj;
+            for (Object json: jsons) {
+                jsonObject = (JSONObject) json;
+
+                GsonBuilder builder = new GsonBuilder();
+                Gson gson = builder.create();
+                Employee employee = gson.fromJson(json.toString(), Employee.class);
+
+            }
+            System.out.println(jsonObject);
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return jsonObject.toString();
     }
 
     public static List<Employee> parseCSV(String[] columnMapping, String fileName) {
@@ -64,15 +125,20 @@ public class Main {
     public static String listToJson(List<Employee> list) {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.setPrettyPrinting().create();
-        Type listType = new TypeToken<List<Employee>>() {}.getType();
-        return  gson.toJson(list, listType);
+        Type listType = new TypeToken<List<Employee>>() {
+        }.getType();
+        return gson.toJson(list, listType);
     }
 
     private static void writeString(String json, String fileName) throws IOException {
         File file = new File(fileName);
+        if ( file.exists())
+            file.delete();
+
         if (file.createNewFile()) {
             try (FileWriter writer = new FileWriter(file)) {
                 writer.write(json);
+                writer.flush();
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -85,7 +151,6 @@ public class Main {
         Document doc = builder.parse(new File(fileName));
 
         Node root = doc.getDocumentElement();
-        System.out.println(root.getNodeName());
         return read(root);
     }
 
